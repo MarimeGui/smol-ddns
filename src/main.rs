@@ -11,7 +11,7 @@ use std::path::PathBuf;
 use clap::Parser;
 
 use crate::{
-    config::{generate_example_config, get_config_path, read_config},
+    config::{ConfigFile, example_yaml_config},
     linux_monitoring::{find_all_addresses, monitor_changes},
     params::Parameters,
     update::make_and_send_updates,
@@ -25,21 +25,20 @@ use crate::{
 // - There might be multiple GUAs (temporary address), is it possible to check which one we want ?
 // - Only delete A or AAAA records if the correct version is associated with the name
 // - Generate personalized config file with command line
-// - Instead of writing to a file, output config to stdout
-// - Make config file mandatory
 // - Option to delete all records on shutdown
 // - Currently relying on init system to restart if anything goes wrong... Should we try again here ?
 // - Maybe have a separate file instead of serializing the example
 // - Feature: If there is no ULA available, use GUA and push it as a ULA
 
 #[derive(Parser)]
-struct Args {
-    /// Generate an example config file and exit
-    #[arg(short, long)]
-    generate_config: bool,
-    /// Specify an alternative path for the config file
-    #[arg(short, long)]
-    config_path: Option<PathBuf>,
+enum Args {
+    /// Print out an example config then quits
+    ExampleConfig,
+    /// Run the daemon, provided a config file
+    Run {
+        /// Path to the config file
+        config: PathBuf,
+    },
 }
 
 #[tokio::main]
@@ -47,18 +46,16 @@ async fn main() {
     // Parse args and config
     let args = Args::parse();
 
-    let config_path = args.config_path.unwrap_or_else(|| {
-        get_config_path()
-            .expect("no default config dir for this system, please specify a path directly")
-    });
+    let config_path = match args {
+        Args::ExampleConfig => {
+            // Simply print the example and quit
+            println!("{}", example_yaml_config());
+            return;
+        }
+        Args::Run { config } => config,
+    };
 
-    if args.generate_config {
-        generate_example_config(&config_path);
-        println!("Config created at {}", config_path.display());
-        return;
-    }
-
-    let config = read_config(&config_path).expect("failed to interpret config file");
+    let config = ConfigFile::from_file(&config_path).expect("failed to interpret config file");
 
     let params = Parameters::from_config(config).unwrap();
 

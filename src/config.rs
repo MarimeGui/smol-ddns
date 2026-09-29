@@ -1,30 +1,8 @@
-use std::{
-    fs::File,
-    io::{BufReader, BufWriter},
-    path::{Path, PathBuf},
-};
+use std::{fs::File, io::BufReader, path::Path};
 
 use anyhow::Result;
 use base64::prelude::{BASE64_STANDARD, Engine as _};
 use serde::{Deserialize, Serialize};
-
-pub fn get_config_path() -> Option<PathBuf> {
-    Some(dirs::config_dir()?.join("smol-ddns.yaml"))
-}
-
-pub fn read_config(config_path: &Path) -> Result<ConfigFile> {
-    let config = serde_yaml::from_reader(BufReader::new(File::open(config_path)?))?;
-
-    Ok(config)
-}
-
-// TODO: Result
-pub fn generate_example_config(config_path: &Path) {
-    let example = example_config();
-    let writer =
-        BufWriter::new(File::create(config_path).expect("could not open config file for writing"));
-    serde_yaml::to_writer(writer, &example).expect("failed to write contents of config file");
-}
 
 #[derive(Serialize, Deserialize)]
 pub struct ConfigFile {
@@ -55,6 +33,14 @@ pub struct ConfigFile {
     pub ipv4_ptr: bool,
 }
 
+impl ConfigFile {
+    pub fn from_file(config_path: &Path) -> Result<Self> {
+        Ok(serde_yaml::from_reader(BufReader::new(File::open(
+            config_path,
+        )?))?)
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct TSIGParams {
     /// Name of this key
@@ -71,7 +57,7 @@ impl TSIGParams {
 
 pub fn example_config() -> ConfigFile {
     ConfigFile {
-        dns_server: Some("fd7e:80a4:3f6b::1".to_string()),
+        dns_server: Some("dns.test".to_string()),
         tsig_params: Some(TSIGParams {
             key_name: "my_super_key".to_string(),
             // This key is just an example, don't worry I'm not using it :)
@@ -96,4 +82,8 @@ pub fn example_config() -> ConfigFile {
         )),
         ipv4_ptr: true,
     }
+}
+
+pub fn example_yaml_config() -> String {
+    serde_yaml::to_string(&example_config()).unwrap()
 }
