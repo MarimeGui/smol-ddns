@@ -46,6 +46,8 @@ pub async fn monitor_changes(params: &Parameters, ips: &mut HashMap<IpAddr, u32>
 
         *ips = new_all_addresses;
 
+        println!("Detected changes, new IPs are: {:?}", ips.keys());
+
         // Re-send updated list of IPs to DNS
         make_and_send_updates(params, ips)?;
     }

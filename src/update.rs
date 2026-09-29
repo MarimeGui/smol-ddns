@@ -1,15 +1,17 @@
 use std::{
     collections::HashMap,
     net::{IpAddr, Ipv4Addr, Ipv6Addr, UdpSocket},
+    time::Duration,
 };
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 
 use crate::{
     config::ConfigFile,
     dns_protocol::{
-        Query, Update,
+        Query, ResponseResult, Update,
         UpdateInner::{self, DeleteAllA, DeleteAllAAAA},
+        check_response,
     },
     params::Parameters,
     signing::sign_hmac_sha256,
@@ -21,7 +23,7 @@ pub fn make_and_send_updates(params: &Parameters, ips: &HashMap<IpAddr, u32>) ->
     // Generate a query for each zone
     let queries = make_queries(&params.zones, &categories, params.ttl);
 
-    for query in queries {
+    for (i, query) in queries.iter().enumerate() {
         // Make into bytes
         let mut out_bytes = query.to_bytes();
 
@@ -37,12 +39,30 @@ pub fn make_and_send_updates(params: &Parameters, ips: &HashMap<IpAddr, u32>) ->
         }
 
         // Send update
+        println!("Sending update {}/{}", i + 1, queries.len());
         let socket = UdpSocket::bind(match params.server {
             IpAddr::V4(_) => "0.0.0.0:0",
             IpAddr::V6(_) => "::0:0",
         })?;
+        socket.set_read_timeout(Some(Duration::from_secs(10)))?;
         socket.send_to(&out_bytes, (params.server, 53))?;
+
+        // Receive response
+        let mut recv_buf = [0u8; 512];
+        let len = socket.recv(&mut recv_buf)?;
+        let response = &recv_buf[..len];
+
+        // Check response
+        let response = check_response(query, response);
+        if response != ResponseResult::NoError {
+            return Err(anyhow!(
+                "received response presents a problem: {:?}",
+                response
+            ));
+        }
     }
+
+    println!("Done.");
 
     Ok(())
 }

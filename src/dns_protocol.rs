@@ -114,3 +114,96 @@ impl Query {
         bytes
     }
 }
+
+pub fn check_response(query: &Query, response: &[u8]) -> ResponseResult {
+    let mut pos = 0;
+
+    if query.transaction_id != u16::from_be_bytes([response[0], response[1]]) {
+        return ResponseResult::TransactionIdDifferent;
+    }
+    pos += 2;
+
+    // Check response in flags
+    let flags = u16::from_be_bytes([response[pos], response[pos + 1]]);
+    pos += 2;
+    if (flags & (1u16 << 15)) == 0 {
+        return ResponseResult::NotResponse;
+    }
+    let response_code = ServerResponseCode::from_code(flags & 0b1111).unwrap();
+    if response_code != ServerResponseCode::NoError {
+        return ResponseResult::Error(response_code);
+    }
+
+    // Zone count
+    pos += 2;
+
+    // Prerequisites
+    pos += 2;
+
+    // Update count
+    pos += 2;
+
+    // Additional RRs
+    pos += 2;
+
+    // Skip zone
+    loop {
+        // Read length
+        let len = response[pos];
+        pos += 1;
+        if len == 0 {
+            // Text over
+            // pos += 1;
+            break;
+        }
+        // Skip actual text
+        pos += len as usize;
+    }
+
+    // Some other stuff afterwards
+    // println!("Left: {:x?}", &response[pos..]);
+
+    ResponseResult::NoError
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum ResponseResult {
+    NoError,
+    TransactionIdDifferent,
+    NotResponse,
+    Error(ServerResponseCode),
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum ServerResponseCode {
+    NoError,
+    FormError,
+    ServFail,
+    NxDomain,
+    NotImp,
+    Refused,
+    YxDomain,
+    YxRRSet,
+    NxRRSet,
+    NotAuth,
+    NotZone,
+}
+
+impl ServerResponseCode {
+    pub const fn from_code(code: u16) -> Option<Self> {
+        Some(match code {
+            0 => Self::NoError,
+            1 => Self::FormError,
+            2 => Self::ServFail,
+            3 => Self::NxDomain,
+            4 => Self::NotImp,
+            5 => Self::Refused,
+            6 => Self::YxDomain,
+            7 => Self::YxRRSet,
+            8 => Self::NxRRSet,
+            9 => Self::NotAuth,
+            10 => Self::NotZone,
+            _ => return None,
+        })
+    }
+}

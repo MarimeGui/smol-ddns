@@ -62,6 +62,7 @@ async fn main() {
     let params = Parameters::from_config(config).unwrap();
 
     let mut ips = find_all_addresses().await.unwrap();
+    println!("Initial IPs: {:?}", ips.keys());
 
     // First DNS update
     make_and_send_updates(&params, &ips).unwrap();
