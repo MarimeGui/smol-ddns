@@ -30,6 +30,7 @@ use crate::{
 // - Option to delete all records on shutdown
 // - Currently relying on init system to restart if anything goes wrong... Should we try again here ?
 // - Allow using a FQDN for server
+// - Maybe have a separate file instead of serializing the example
 
 #[derive(Parser)]
 struct Args {
