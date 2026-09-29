@@ -22,10 +22,13 @@ use crate::{
 // - Windows IP monitor
 // - For certain HWaddresses, use a specific set of names. Have a default for all other interfaces, with a white/blacklist
 // - Retrieve default nameserver
-// - Check that dirs behaves properly when running as root, I'd like to put the conf file in /etc
 // - There might be multiple GUAs (temporary address), is it possible to check which one we want ?
 // - Only delete A or AAAA records if the correct version is associated with the name
 // - Generate personalized config file with command line
+// - Instead of writing to a file, output config to stdout
+// - Make config file mandatory
+// - Option to delete all records on shutdown
+// - Listen to response, if problem try again later
 
 #[derive(Parser)]
 struct Args {
