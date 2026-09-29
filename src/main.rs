@@ -28,7 +28,6 @@ use crate::{
 // - Option to delete all records on shutdown
 // - Currently relying on init system to restart if anything goes wrong... Should we try again here ?
 // - Maybe have a separate file instead of serializing the example
-// - Feature: If there is no ULA available, use GUA and push it as a ULA
 
 #[derive(Parser)]
 enum Args {

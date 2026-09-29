@@ -13,6 +13,7 @@ use crate::{
 pub struct Parameters {
     pub server_socket_addr: SocketAddr,
     pub zones: HashMap<String, HashMap<String, Vec<ZoneType>>>,
+    pub gua_as_ula: bool,
     pub ttl: u32,
     pub tsig_params: Option<TSIGParams>,
 }
@@ -20,6 +21,7 @@ pub struct Parameters {
 impl Parameters {
     pub fn from_config(config: ConfigFile) -> Result<Self, ParametersError> {
         let zones = group_zones(&config);
+        let gua_as_ula = config.gua_as_ula;
         let ttl = config.ttl;
         let tsig_params = config.tsig_params;
 
@@ -34,6 +36,7 @@ impl Parameters {
         Ok(Self {
             server_socket_addr: server_socket_addrs,
             zones,
+            gua_as_ula,
             ttl,
             tsig_params,
         })

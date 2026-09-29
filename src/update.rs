@@ -18,7 +18,7 @@ use crate::{
 };
 
 pub fn make_and_send_updates(params: &Parameters, ips: &HashMap<IpAddr, u32>) -> Result<()> {
-    let categories = categorize_ips(ips.iter().map(|e| *e.0));
+    let categories = categorize_ips(params.gua_as_ula, ips.iter().map(|e| *e.0));
 
     // Generate a query for each zone
     let queries = make_queries(&params.zones, &categories, params.ttl);
@@ -75,7 +75,7 @@ struct CategorizedIPs {
     legacy: Vec<Ipv4Addr>,
 }
 
-fn categorize_ips(ips: impl Iterator<Item = IpAddr>) -> CategorizedIPs {
+fn categorize_ips(gua_as_ula: bool, ips: impl Iterator<Item = IpAddr>) -> CategorizedIPs {
     let mut categories = CategorizedIPs::default();
 
     for ip in ips {
@@ -95,6 +95,11 @@ fn categorize_ips(ips: impl Iterator<Item = IpAddr>) -> CategorizedIPs {
             // Technically not correct, but should be fine
             categories.globally_unique.push(ipv6)
         }
+    }
+
+    // If feature is turned on, copy all GUAs and use them as ULAs
+    if gua_as_ula & categories.unique_local.is_empty() {
+        categories.unique_local = categories.globally_unique.clone()
     }
 
     categories

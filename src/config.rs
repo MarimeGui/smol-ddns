@@ -11,6 +11,9 @@ pub struct ConfigFile {
     /// If enabled, all updates will be signed using TSIG.
     pub tsig_params: Option<TSIGParams>,
 
+    /// If there is no Unique Local Address available, use the Globally Unique Address to populate ULA records.
+    pub gua_as_ula: bool,
+
     /// Time-to-live of updated records
     pub ttl: u32,
 
@@ -63,6 +66,7 @@ pub fn example_config() -> ConfigFile {
             // This key is just an example, don't worry I'm not using it :)
             key_secret: "NzrFJTklHQltxfu/WhfvVZENwds24dJL3r1ET/394UE=".to_string(),
         }),
+        gua_as_ula: true,
         ttl: 3600,
         lla_fqdn: Some((
             "my_machine".to_string(),
