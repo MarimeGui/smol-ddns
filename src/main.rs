@@ -28,7 +28,8 @@ use crate::{
 // - Instead of writing to a file, output config to stdout
 // - Make config file mandatory
 // - Option to delete all records on shutdown
-// - Listen to response, if problem try again later
+// - Currently relying on init system to restart if anything goes wrong... Should we try again here ?
+// - Allow using a FQDN for server
 
 #[derive(Parser)]
 struct Args {
