@@ -25,6 +25,7 @@ use crate::{
 // - Check that dirs behaves properly when running as root, I'd like to put the conf file in /etc
 // - There might be multiple GUAs (temporary address), is it possible to check which one we want ?
 // - Only delete A or AAAA records if the correct version is associated with the name
+// - Generate personalized config file with command line
 
 #[derive(Parser)]
 struct Args {
