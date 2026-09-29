@@ -1,9 +1,7 @@
 use std::{
     fs::File,
     io::{BufReader, BufWriter},
-    net::{IpAddr, Ipv6Addr},
     path::{Path, PathBuf},
-    str::FromStr,
 };
 
 use anyhow::Result;
@@ -30,8 +28,8 @@ pub fn generate_example_config(config_path: &Path) {
 
 #[derive(Serialize, Deserialize)]
 pub struct ConfigFile {
-    /// Address of the server to send updates to. If None, will try to figure it out from system.
-    pub dns_server: Option<IpAddr>,
+    /// Address of the server to send updates to. Can be an address or a hostname. If None, will try to figure it out from system.
+    pub dns_server: Option<String>,
     /// If enabled, all updates will be signed using TSIG.
     pub tsig_params: Option<TSIGParams>,
 
@@ -73,7 +71,7 @@ impl TSIGParams {
 
 pub fn example_config() -> ConfigFile {
     ConfigFile {
-        dns_server: Some(IpAddr::V6(Ipv6Addr::from_str("fd7e:80a4:3f6b::1").unwrap())),
+        dns_server: Some("fd7e:80a4:3f6b::1".to_string()),
         tsig_params: Some(TSIGParams {
             key_name: "my_super_key".to_string(),
             // This key is just an example, don't worry I'm not using it :)

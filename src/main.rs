@@ -29,7 +29,6 @@ use crate::{
 // - Make config file mandatory
 // - Option to delete all records on shutdown
 // - Currently relying on init system to restart if anything goes wrong... Should we try again here ?
-// - Allow using a FQDN for server
 // - Maybe have a separate file instead of serializing the example
 
 #[derive(Parser)]
@@ -61,6 +60,8 @@ async fn main() {
     let config = read_config(&config_path).expect("failed to interpret config file");
 
     let params = Parameters::from_config(config).unwrap();
+
+    println!("Using server at {}", params.server_socket_addr.ip());
 
     let mut ips = find_all_addresses().await.unwrap();
     println!("Initial IPs: {:?}", ips.keys());

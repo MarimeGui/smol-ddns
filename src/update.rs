@@ -40,12 +40,12 @@ pub fn make_and_send_updates(params: &Parameters, ips: &HashMap<IpAddr, u32>) ->
 
         // Send update
         println!("Sending update {}/{}", i + 1, queries.len());
-        let socket = UdpSocket::bind(match params.server {
+        let socket = UdpSocket::bind(match params.server_socket_addr.ip() {
             IpAddr::V4(_) => "0.0.0.0:0",
             IpAddr::V6(_) => "::0:0",
         })?;
         socket.set_read_timeout(Some(Duration::from_secs(10)))?;
-        socket.send_to(&out_bytes, (params.server, 53))?;
+        socket.send_to(&out_bytes, params.server_socket_addr)?;
 
         // Receive response
         let mut recv_buf = [0u8; 512];
